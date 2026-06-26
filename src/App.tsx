@@ -21,6 +21,7 @@ import Vistorias from "./pages/Vistorias";
 import Financeiro from "./pages/Financeiro";
 import Equipe from "./pages/Equipe";
 import Configuracoes from "./pages/Configuracoes";
+import WhatsApp from "./pages/WhatsApp";
 import Tarefas from "./pages/Tarefas";
 import ImovelDetalhe from "./pages/ImovelDetalhe";
 import ContratoDetalhe from "./pages/ContratoDetalhe";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/tarefas" element={<Tarefas />} />
             <Route path="/imoveis/:id" element={<ImovelDetalhe />} />
             <Route path="/equipe" element={<Equipe />} />
+            <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
 

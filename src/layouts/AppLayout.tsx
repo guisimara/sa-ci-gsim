@@ -3,8 +3,8 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Globe, Kanban, Users, KeyRound,
   CreditCard, FileText, ClipboardCheck, TrendingUp, UserCog,
-  Sparkles, Settings, LogOut, Search, Plus, Bell, ChevronDown,
-  CheckSquare, ExternalLink, Home, User, Check,
+  Settings, LogOut, Search, Plus, Bell, ChevronDown,
+  CheckSquare, ExternalLink, Home, User, Check, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ const nav = [
   { to: "/financeiro", label: "Financeiro", icon: TrendingUp },
   { to: "/tarefas", label: "Tarefas", icon: CheckSquare },
   { to: "/equipe", label: "Corretores / Equipe", icon: UserCog },
+  { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
