@@ -4,9 +4,30 @@ export type PropertyStatus = "disponivel" | "reservado" | "negociacao" | "vendid
 export type PropertyPurpose = "venda" | "locacao" | "venda_locacao";
 export type PropertyType = "apartamento" | "casa" | "terreno" | "comercial" | "galpao" | "chacara" | "cobertura" | "studio";
 
+export interface Unit {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  totalUnits: number;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  priority: "alta" | "media" | "baixa";
+  dueDate?: string;
+  clientId?: string;
+  clientName?: string;
+  done: boolean;
+  createdAt: string;
+}
+
 export interface Property {
   id: string;
   code: string;
+  unitId?: string;
   title: string;
   type: PropertyType;
   purpose: PropertyPurpose;
@@ -187,6 +208,21 @@ export const monthlyRevenue = [
   { month: "Nov", value: 38800 },
   { month: "Dez", value: 52100 },
   { month: "Jan", value: 47600 },
+];
+
+export const units: Unit[] = [
+  { id: "un1", name: "Edifício Atlântico", address: "Av. Boa Viagem, 4500", city: "Recife", state: "PE", totalUnits: 120 },
+  { id: "un2", name: "Condomínio Aldeia Park", address: "Rua das Palmeiras, 100", city: "Camaragibe", state: "PE", totalUnits: 48 },
+  { id: "un3", name: "Empresarial Pina Tower", address: "Av. Conselheiro Aguiar, 2700", city: "Recife", state: "PE", totalUnits: 80 },
+];
+
+export const tasks: Task[] = [
+  { id: "tk1", title: "Confirmar visita com Mariana", priority: "alta", dueDate: "2025-01-22", clientId: "c1", clientName: "Mariana Alves", done: false, createdAt: "2025-01-20" },
+  { id: "tk2", title: "Enviar documentos para Pedro Henrique", priority: "alta", dueDate: "2025-01-23", clientId: "c2", clientName: "Pedro Henrique", done: false, createdAt: "2025-01-20" },
+  { id: "tk3", title: "Retornar contato Júlia Ramos", priority: "media", dueDate: "2025-01-25", clientId: "c3", clientName: "Júlia Ramos", done: true, createdAt: "2025-01-19" },
+  { id: "tk4", title: "Preparar proposta Cobertura CO-0011", priority: "alta", dueDate: "2025-01-24", done: false, createdAt: "2025-01-20" },
+  { id: "tk5", title: "Enviar boleto aluguel Beatriz Mota", priority: "media", dueDate: "2025-02-01", clientId: "c1", clientName: "Beatriz Mota", done: false, createdAt: "2025-01-20" },
+  { id: "tk6", title: "Agendar vistoria de saída Diego Ramos", priority: "baixa", dueDate: "2025-02-10", clientId: "c2", clientName: "Diego Ramos", done: false, createdAt: "2025-01-21" },
 ];
 
 export const formatBRL = (v: number) =>

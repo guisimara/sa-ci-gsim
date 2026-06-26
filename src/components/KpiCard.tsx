@@ -11,19 +11,11 @@ interface KpiCardProps {
   accent?: "primary" | "success" | "warning" | "info" | "destructive";
 }
 
-const accentMap = {
-  primary: "bg-primary-soft text-primary",
-  success: "bg-success-soft text-success",
-  warning: "bg-warning-soft text-warning",
-  info: "bg-info-soft text-info",
-  destructive: "bg-destructive/10 text-destructive",
-};
-
-export function KpiCard({ label, value, icon, hint, trend, accent = "primary" }: KpiCardProps) {
+export function KpiCard({ label, value, icon, hint, trend }: KpiCardProps) {
   return (
     <Card className="p-5 shadow-card border-border/60 hover:shadow-lg-custom transition-shadow">
       <div className="flex items-start justify-between mb-3">
-        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", accentMap[accent])}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-soft text-primary">
           {icon}
         </div>
         {trend && (

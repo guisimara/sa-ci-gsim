@@ -2,8 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Building2, Users, FileText, TrendingUp, KeyRound, Wallet, AlertTriangle, Send } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
-import { StatusBadge } from "@/components/StatusBadge";
-import { leadsBySource, monthlyRevenue, properties, payments, leads, formatBRL, formatDate } from "@/lib/mock-data";
+import { leadsBySource, monthlyRevenue, properties, payments, formatBRL, formatDate } from "@/lib/mock-data";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
@@ -120,22 +119,6 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <Card className="p-6 shadow-card mt-6">
-        <h3 className="font-semibold mb-4">Tarefas e follow-ups do CRM</h3>
-        <div className="space-y-2">
-          {leads.filter((l) => l.nextTask).map((l) => (
-            <div key={l.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50">
-              <input type="checkbox" className="accent-primary w-4 h-4" />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{l.nextTask}</div>
-                <div className="text-xs text-muted-foreground">{l.name} · {l.propertyInterest}</div>
-              </div>
-              <StatusBadge status={l.priority} />
-              <div className="text-xs text-muted-foreground">{l.nextTaskDate && formatDate(l.nextTaskDate)}</div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </>
   );
 }
