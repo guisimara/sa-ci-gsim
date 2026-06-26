@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Building2, Users, FileText, TrendingUp, KeyRound, Wallet, AlertTriangle, Send } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
-import { leadsBySource, monthlyRevenue, properties, payments, formatBRL, formatDate } from "@/lib/mock-data";
+import { leadsBySource, monthlyRevenue, properties, payments, leads, formatBRL, formatDate } from "@/lib/mock-data";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
