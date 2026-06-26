@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,33 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, CheckCircle2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useSite } from "@/context/SiteContext";
+
+// Compress image to max 900px and WebP 0.72 quality — keeps base64 small enough for localStorage
+function compressImage(file: File, maxPx = 900, quality = 0.72): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxPx || height > maxPx) {
+          const r = Math.min(maxPx / width, maxPx / height);
+          width = Math.round(width * r);
+          height = Math.round(height * r);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/webp", quality));
+      };
+      img.src = e.target!.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 const PALETTE = [
   "#7c3aed", "#4f46e5", "#0ea5e9", "#14b8a6",
@@ -31,32 +58,45 @@ function ImageUpload({
   maxMB: number;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > maxMB * 1024 * 1024) {
       toast.error(`Arquivo muito grande. Máximo ${maxMB}MB.`);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(file);
-  }
+    setLoading(true);
+    try {
+      const compressed = await compressImage(file);
+      onChange(compressed);
+    } catch {
+      toast.error("Erro ao processar imagem.");
+    } finally {
+      setLoading(false);
+      e.target.value = "";
+    }
+  }, [maxMB, onChange]);
 
   return (
     <div>
       <Label>{label}</Label>
       <div
         className="mt-1.5 border-2 border-dashed border-border rounded-xl p-4 text-center text-sm text-muted-foreground hover:border-primary cursor-pointer flex flex-col items-center gap-2"
-        onClick={() => ref.current?.click()}
+        onClick={() => !loading && ref.current?.click()}
       >
-        {value ? (
+        {loading ? (
+          <div className="flex items-center gap-2 text-primary">
+            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            Processando...
+          </div>
+        ) : value ? (
           <img src={value} alt="preview" className="max-h-24 object-contain rounded" />
         ) : (
           <>
             <Upload className="w-5 h-5 opacity-50" />
-            <span>Clique para fazer upload ({accept.replace(/image\//g, "").toUpperCase()}, até {maxMB}MB)</span>
+            <span>Clique para fazer upload (PNG/JPG, até {maxMB}MB)</span>
           </>
         )}
         <input ref={ref} type="file" accept={accept} className="hidden" onChange={handleFile} />

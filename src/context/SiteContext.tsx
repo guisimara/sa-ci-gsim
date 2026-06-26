@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 
 export interface SiteBlock {
   id: string;
@@ -72,16 +72,27 @@ const SiteContext = createContext<SiteContextValue | null>(null);
 
 export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<SiteConfig>(loadFromStorage);
+  // Keep a ref always in sync so saveConfig can read latest without stale closure
+  const configRef = useRef(config);
+  useEffect(() => { configRef.current = config; }, [config]);
 
   const updateConfig = useCallback((partial: Partial<SiteConfig>) => {
     setConfig((prev) => ({ ...prev, ...partial }));
   }, []);
 
   const saveConfig = useCallback(() => {
-    setConfig((prev) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
-      return prev;
-    });
+    const current = configRef.current;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    } catch {
+      // QuotaExceededError: try saving without images (images stay in memory only)
+      try {
+        const slim: SiteConfig = { ...current, logo: null, heroImage: null, bioImage: null };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+      } catch {
+        // still fails — just ignore, config stays in memory for this session
+      }
+    }
   }, []);
 
   return (
