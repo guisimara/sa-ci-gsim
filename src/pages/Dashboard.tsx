@@ -1,13 +1,21 @@
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Building2, Users, FileText, TrendingUp, KeyRound, Wallet, AlertTriangle, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Users, FileText, TrendingUp, KeyRound, Wallet, AlertTriangle, Send, CheckCircle2, Clock } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { PageHeader } from "@/components/PageHeader";
-import { leadsBySource, monthlyRevenue, properties, payments, leads, formatBRL, formatDate } from "@/lib/mock-data";
+import { leadsBySource, monthlyRevenue, properties, payments, leads, tasks, formatBRL, formatDate } from "@/lib/mock-data";
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
+const priorityColor: Record<string, string> = { alta: "bg-destructive", media: "bg-warning", baixa: "bg-success" };
+
 export default function Dashboard() {
+  const navigate = useNavigate();
   const topProperties = [...properties].sort((a, b) => b.leads - a.leads).slice(0, 5);
   const nextPayments = payments.filter((p) => p.status === "pendente").slice(0, 5);
+  const today = new Date();
+  const in3Days = new Date(today); in3Days.setDate(today.getDate() + 3);
+  const urgentTasks = tasks.filter((t) => !t.done && t.dueDate && new Date(t.dueDate) <= in3Days).slice(0, 5);
 
   return (
     <>
@@ -96,6 +104,29 @@ export default function Dashboard() {
             ))}
           </div>
         </Card>
+
+        {urgentTasks.length > 0 && (
+          <Card className="p-6 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Tarefas urgentes</h3>
+              <Button variant="ghost" size="sm" className="text-primary" onClick={() => navigate("/tarefas")}>Ver todas</Button>
+            </div>
+            <div className="space-y-3">
+              {urgentTasks.map((t) => (
+                <div key={t.id} className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                  <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${priorityColor[t.priority]}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.title}</div>
+                    {t.clientName && <div className="text-xs text-muted-foreground">{t.clientName}</div>}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-warning flex-shrink-0">
+                    <Clock className="w-3 h-3" />{formatDate(t.dueDate!)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         <Card className="p-6 shadow-card">
           <h3 className="font-semibold mb-4">Próximas cobranças</h3>

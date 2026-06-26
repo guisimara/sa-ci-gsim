@@ -24,6 +24,7 @@ import IA from "./pages/IA";
 import Configuracoes from "./pages/Configuracoes";
 import Tarefas from "./pages/Tarefas";
 import ImovelDetalhe from "./pages/ImovelDetalhe";
+import ContratoDetalhe from "./pages/ContratoDetalhe";
 import { AppProvider } from "./context/AppContext";
 import {
   ClienteHome, ClientePagamentos, ClienteContrato, ClienteVistoria,
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/locacoes" element={<Locacoes />} />
             <Route path="/pagamentos" element={<Pagamentos />} />
             <Route path="/contratos" element={<Contratos />} />
+            <Route path="/contratos/:id" element={<ContratoDetalhe />} />
             <Route path="/vistorias" element={<Vistorias />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/tarefas" element={<Tarefas />} />

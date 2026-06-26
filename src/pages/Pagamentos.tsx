@@ -3,29 +3,60 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Plus, Download } from "lucide-react";
-import { payments, formatBRL, formatDate } from "@/lib/mock-data";
+import { payments, clients, formatBRL, formatDate, Payment } from "@/lib/mock-data";
+import { toast } from "sonner";
 
 const typeLabel: Record<string, string> = {
   aluguel: "Aluguel", condominio: "Condomínio", iptu: "IPTU", consumo: "Consumo",
   comissao: "Comissão", repasse: "Repasse ao proprietário", taxa: "Taxa administrativa", outros: "Outros",
 };
 
+interface NewPayment {
+  type: string; payer: string; propertyTitle: string; dueDate: string; amount: string; description: string;
+}
+const empty: NewPayment = { type: "aluguel", payer: "", propertyTitle: "", dueDate: "", amount: "", description: "" };
+
 export default function Pagamentos() {
   const [filter, setFilter] = useState("todos");
-  const filtered = filter === "todos" ? payments : payments.filter((p) => p.status === filter);
+  const [list, setList] = useState<Payment[]>(payments);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState<NewPayment>(empty);
+
+  const filtered = filter === "todos" ? list : list.filter((p) => p.status === filter);
 
   const totals = {
-    pendente: payments.filter((p) => p.status === "pendente").reduce((a, p) => a + p.amount, 0),
-    pago: payments.filter((p) => p.status === "pago").reduce((a, p) => a + p.amount, 0),
-    vencido: payments.filter((p) => p.status === "vencido").reduce((a, p) => a + p.amount, 0),
+    pendente: list.filter((p) => p.status === "pendente").reduce((a, p) => a + p.amount, 0),
+    pago: list.filter((p) => p.status === "pago").reduce((a, p) => a + p.amount, 0),
+    vencido: list.filter((p) => p.status === "vencido").reduce((a, p) => a + p.amount, 0),
+  };
+
+  const save = () => {
+    if (!form.payer.trim() || !form.dueDate || !form.amount) {
+      toast.error("Preencha pagador, vencimento e valor.");
+      return;
+    }
+    const amount = parseFloat(form.amount.replace(",", "."));
+    if (isNaN(amount)) { toast.error("Valor inválido."); return; }
+    setList((prev) => [...prev, {
+      id: `pay${Date.now()}`, type: form.type as any, payer: form.payer,
+      propertyTitle: form.propertyTitle, dueDate: form.dueDate, amount, status: "pendente",
+    }]);
+    toast.success("Cobrança registrada!");
+    setSheetOpen(false);
+    setForm(empty);
   };
 
   return (
     <>
       <PageHeader title="Pagamentos" description="Boletos, guias e comprovantes">
-        <Button className="gradient-primary border-0 shadow-glow gap-2"><Plus className="w-4 h-4" />Nova cobrança</Button>
+        <Button className="gradient-primary border-0 shadow-glow gap-2" onClick={() => { setForm(empty); setSheetOpen(true); }}>
+          <Plus className="w-4 h-4" />Nova cobrança
+        </Button>
       </PageHeader>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
@@ -54,7 +85,7 @@ export default function Pagamentos() {
           <tbody>
             {filtered.map((p) => (
               <tr key={p.id} className="border-t border-border hover:bg-muted/30">
-                <td className="p-4 font-medium">{typeLabel[p.type]}</td>
+                <td className="p-4 font-medium">{typeLabel[p.type] ?? p.type}</td>
                 <td className="p-4">{p.payer}</td>
                 <td className="p-4 text-muted-foreground">{p.propertyTitle}</td>
                 <td className="p-4">{formatDate(p.dueDate)}</td>
@@ -66,6 +97,55 @@ export default function Pagamentos() {
           </tbody>
         </table>
       </Card>
+
+      {/* Nova cobrança Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader><SheetTitle>Nova cobrança</SheetTitle></SheetHeader>
+          <div className="space-y-4 mt-6">
+            <div>
+              <Label>Tipo de cobrança</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(typeLabel).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Pagador (cliente) *</Label>
+              <Select value={form.payer} onValueChange={(v) => setForm({ ...form, payer: v })}>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Selecionar cliente..." /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Imóvel (título)</Label>
+              <Input className="mt-1.5" placeholder="Ex: Apartamento 3 quartos Boa Viagem" value={form.propertyTitle} onChange={(e) => setForm({ ...form, propertyTitle: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Vencimento *</Label>
+                <Input type="date" className="mt-1.5" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+              </div>
+              <div>
+                <Label>Valor (R$) *</Label>
+                <Input className="mt-1.5" placeholder="0,00" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>Observações</Label>
+              <Input className="mt-1.5" placeholder="Informações adicionais..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div className="flex gap-2 pt-4 border-t border-border">
+              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancelar</Button>
+              <Button className="flex-1 gradient-primary border-0" onClick={save}>Registrar cobrança</Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

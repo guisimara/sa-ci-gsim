@@ -242,26 +242,30 @@ export default function CRM() {
       <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader><SheetTitle>Personalizar Colunas</SheetTitle></SheetHeader>
-          <p className="text-sm text-muted-foreground mt-2 mb-4">Clique no nome para renomear. Use × para deletar (requer confirmação).</p>
-          <div className="space-y-2">
-            {stages.map((stage, idx) => (
-              <div key={stage.id} className="flex items-center gap-3 px-3 py-3 rounded-xl border border-border bg-muted/30">
-                <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <span className="w-6 h-6 rounded-full bg-primary-soft text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">{idx + 1}</span>
-                {inlineEdit?.id === stage.id ? (
-                  <div className="flex-1 flex gap-2">
-                    <Input value={inlineEdit.name} onChange={(e) => setInlineEdit({ ...inlineEdit, name: e.target.value })} className="h-8" autoFocus
-                      onKeyDown={(e) => { if (e.key === "Enter") saveInlineEdit(); if (e.key === "Escape") setInlineEdit(null); }} />
-                    <Button size="sm" className="h-8 px-2" onClick={saveInlineEdit}><Check className="w-3.5 h-3.5" /></Button>
-                  </div>
-                ) : (
-                  <span className="flex-1 text-sm font-medium cursor-pointer hover:text-primary" onClick={() => setInlineEdit({ id: stage.id, name: stage.name })}>{stage.name}</span>
-                )}
-                <span className="text-xs text-muted-foreground">{items.filter((l) => l.stageId === stage.id).length} leads</span>
-                <button className="text-destructive hover:text-destructive/70 text-lg font-bold leading-none" onClick={() => setDeleteConfirm({ open: true, stageId: stage.id, input: "" })}>×</button>
+          <p className="text-sm text-muted-foreground mt-2 mb-4">Arraste para reordenar. Clique no nome para renomear. Use × para deletar.</p>
+          <DndContext sensors={sensors} onDragEnd={(e) => {
+            const { active, over } = e;
+            if (!over || active.id === over.id) return;
+            const oldIdx = stages.findIndex((s) => s.id === active.id);
+            const newIdx = stages.findIndex((s) => s.id === over.id);
+            if (oldIdx !== newIdx) setStages(arrayMove(stages, oldIdx, newIdx));
+          }}>
+            <SortableContext items={stages.map((s) => s.id)} strategy={undefined as any}>
+              <div className="space-y-2">
+                {stages.map((stage, idx) => (
+                  <PanelSortableItem key={stage.id} stage={stage} idx={idx}
+                    leadCount={items.filter((l) => l.stageId === stage.id).length}
+                    inlineEdit={inlineEdit}
+                    onInlineEdit={(id, name) => setInlineEdit({ id, name })}
+                    onInlineEditChange={(name) => setInlineEdit((e) => e ? { ...e, name } : e)}
+                    onInlineEditSave={saveInlineEdit}
+                    onInlineEditCancel={() => setInlineEdit(null)}
+                    onDelete={(id) => setDeleteConfirm({ open: true, stageId: id, input: "" })}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
           <Button variant="outline" className="w-full mt-4 gap-2"
             onClick={() => setStages((prev) => [...prev, { id: `s${Date.now()}`, name: "Nova etapa", order: prev.length + 1, color: "primary" }])}>
             <Plus className="w-4 h-4" /> Adicionar etapa
@@ -332,6 +336,38 @@ function SortableColumn({ stage, leads, onCardClick, onRename, onCustomize, onDe
       <div className="px-3 pb-3 space-y-2 min-h-[100px]">
         {leads.map((l) => <LeadCard key={l.id} lead={l} onClick={() => onCardClick(l)} />)}
       </div>
+    </div>
+  );
+}
+
+function PanelSortableItem({ stage, idx, leadCount, inlineEdit, onInlineEdit, onInlineEditChange, onInlineEditSave, onInlineEditCancel, onDelete }: {
+  stage: CrmStage; idx: number; leadCount: number;
+  inlineEdit: { id: string; name: string } | null;
+  onInlineEdit: (id: string, name: string) => void;
+  onInlineEditChange: (n: string) => void;
+  onInlineEditSave: () => void;
+  onInlineEditCancel: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stage.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 px-3 py-3 rounded-xl border border-border bg-muted/30">
+      <button className="cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners}>
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </button>
+      <span className="w-6 h-6 rounded-full bg-primary-soft text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">{idx + 1}</span>
+      {inlineEdit?.id === stage.id ? (
+        <div className="flex-1 flex gap-2">
+          <Input value={inlineEdit.name} onChange={(e) => onInlineEditChange(e.target.value)} className="h-8" autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter") onInlineEditSave(); if (e.key === "Escape") onInlineEditCancel(); }} />
+          <Button size="sm" className="h-8 px-2" onClick={onInlineEditSave}><Check className="w-3.5 h-3.5" /></Button>
+        </div>
+      ) : (
+        <span className="flex-1 text-sm font-medium cursor-pointer hover:text-primary" onClick={() => onInlineEdit(stage.id, stage.name)}>{stage.name}</span>
+      )}
+      <span className="text-xs text-muted-foreground">{leadCount} leads</span>
+      <button className="text-destructive hover:text-destructive/70 text-lg font-bold leading-none" onClick={() => onDelete(stage.id)}>×</button>
     </div>
   );
 }

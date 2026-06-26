@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,27 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Mail, Shield } from "lucide-react";
 import { team, formatBRL } from "@/lib/mock-data";
+import { toast } from "sonner";
+
+const permOptions = [
+  { id: "see_all_leads", label: "Corretores veem leads de outros corretores", desc: "Ao ativar, todos os corretores enxergam o CRM consolidado." },
+  { id: "see_revenue", label: "Corretores veem faturamento total da matriz", desc: "Por padrão, apenas a matriz vê o faturamento global." },
+  { id: "transfer_leads", label: "Permitir transferência de leads entre corretores", desc: "Movimentação livre de leads no CRM." },
+  { id: "share_properties", label: "Compartilhar imóveis com toda a equipe", desc: "Todos os imóveis ficam visíveis para todos os corretores." },
+];
 
 export default function Equipe() {
+  const [perms, setPerms] = useState<Record<string, boolean>>({
+    see_all_leads: false, see_revenue: false, transfer_leads: false, share_properties: false,
+  });
+
+  const toggle = (id: string) => {
+    const next = !perms[id];
+    setPerms((p) => ({ ...p, [id]: next }));
+    const opt = permOptions.find((o) => o.id === id);
+    toast.success(`${opt?.label}: ${next ? "Ativado" : "Desativado"}`);
+  };
+
   return (
     <>
       <PageHeader title="Corretores e Equipe" description="Gerencie sua equipe e permissões — Plano Enterprise">
@@ -37,15 +57,10 @@ export default function Equipe() {
       <Card className="p-6 shadow-card">
         <div className="flex items-center gap-3 mb-5"><Shield className="w-5 h-5 text-primary" /><h3 className="font-semibold">Permissões e compartilhamento</h3></div>
         <div className="space-y-4">
-          {[
-            { label: "Corretores veem leads de outros corretores", desc: "Ao ativar, todos os corretores enxergam o CRM consolidado." },
-            { label: "Corretores veem faturamento total da matriz", desc: "Por padrão, apenas a matriz vê o faturamento global." },
-            { label: "Permitir transferência de leads entre corretores", desc: "Movimentação livre de leads no CRM." },
-            { label: "Compartilhar imóveis com toda a equipe", desc: "Todos os imóveis ficam visíveis para todos os corretores." },
-          ].map((p) => (
-            <div key={p.label} className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
+          {permOptions.map((p) => (
+            <div key={p.id} className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
               <div><div className="font-medium text-sm">{p.label}</div><div className="text-xs text-muted-foreground">{p.desc}</div></div>
-              <Switch defaultChecked={false} />
+              <Switch checked={perms[p.id]} onCheckedChange={() => toggle(p.id)} />
             </div>
           ))}
         </div>
