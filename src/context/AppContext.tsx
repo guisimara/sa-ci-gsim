@@ -29,6 +29,7 @@ interface AppContextType {
   unreadCount: number;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  addNotification: (n: AppNotification) => void;
 }
 
 const AppContext = createContext<AppContextType>(null!);
@@ -99,6 +100,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
+  const addNotification = useCallback((n: AppNotification) => {
+    setNotifications((prev) => [n, ...prev]);
+  }, []);
+
   const unitName = selectedUnit
     ? (units.find((u) => u.id === selectedUnit)?.name ?? "Unidade")
     : "Matriz (Todas)";
@@ -110,7 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         selectedUnit, setSelectedUnit, unitName,
         properties, addProperty, updateProperty,
-        notifications, unreadCount, markAsRead, markAllAsRead,
+        notifications, unreadCount, markAsRead, markAllAsRead, addNotification,
       }}
     >
       {children}
