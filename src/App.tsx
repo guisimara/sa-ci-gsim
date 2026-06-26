@@ -26,6 +26,7 @@ import Tarefas from "./pages/Tarefas";
 import ImovelDetalhe from "./pages/ImovelDetalhe";
 import ContratoDetalhe from "./pages/ContratoDetalhe";
 import { AppProvider } from "./context/AppContext";
+import { SiteProvider } from "./context/SiteContext";
 import {
   ClienteHome, ClientePagamentos, ClienteContrato, ClienteVistoria,
   ClienteLocacao, ClienteArquivos, ClienteSuporte,
@@ -37,6 +38,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AppProvider>
+    <SiteProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -82,6 +84,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </SiteProvider>
     </AppProvider>
   </QueryClientProvider>
 );
