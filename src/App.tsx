@@ -23,6 +23,8 @@ import Equipe from "./pages/Equipe";
 import IA from "./pages/IA";
 import Configuracoes from "./pages/Configuracoes";
 import Tarefas from "./pages/Tarefas";
+import ImovelDetalhe from "./pages/ImovelDetalhe";
+import { AppProvider } from "./context/AppContext";
 import {
   ClienteHome, ClientePagamentos, ClienteContrato, ClienteVistoria,
   ClienteLocacao, ClienteArquivos, ClienteSuporte,
@@ -33,6 +35,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <AppProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -56,6 +59,7 @@ const App = () => (
             <Route path="/vistorias" element={<Vistorias />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/tarefas" element={<Tarefas />} />
+            <Route path="/imoveis/:id" element={<ImovelDetalhe />} />
             <Route path="/equipe" element={<Equipe />} />
             <Route path="/ia" element={<IA />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
@@ -76,6 +80,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </AppProvider>
   </QueryClientProvider>
 );
 
