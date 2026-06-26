@@ -35,7 +35,6 @@ const nav = [
   { to: "/financeiro", label: "Financeiro", icon: TrendingUp },
   { to: "/tarefas", label: "Tarefas", icon: CheckSquare },
   { to: "/equipe", label: "Corretores / Equipe", icon: UserCog },
-  { to: "/ia", label: "IA e Conteúdo", icon: Sparkles },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 

@@ -20,7 +20,6 @@ import Contratos from "./pages/Contratos";
 import Vistorias from "./pages/Vistorias";
 import Financeiro from "./pages/Financeiro";
 import Equipe from "./pages/Equipe";
-import IA from "./pages/IA";
 import Configuracoes from "./pages/Configuracoes";
 import Tarefas from "./pages/Tarefas";
 import ImovelDetalhe from "./pages/ImovelDetalhe";
@@ -65,7 +64,6 @@ const App = () => (
             <Route path="/tarefas" element={<Tarefas />} />
             <Route path="/imoveis/:id" element={<ImovelDetalhe />} />
             <Route path="/equipe" element={<Equipe />} />
-            <Route path="/ia" element={<IA />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
 

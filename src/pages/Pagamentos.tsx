@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, Upload, Paperclip, X } from "lucide-react";
 import { payments, clients, formatBRL, formatDate, Payment } from "@/lib/mock-data";
 import { toast } from "sonner";
+
+interface PaymentFile { name: string; size: number; }
 
 const typeLabel: Record<string, string> = {
   aluguel: "Aluguel", condominio: "Condomínio", iptu: "IPTU", consumo: "Consumo",
@@ -26,6 +29,20 @@ export default function Pagamentos() {
   const [list, setList] = useState<Payment[]>(payments);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewPayment>(empty);
+  const [payFile, setPayFile] = useState<PaymentFile | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handlePayFile = (file: File) => {
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    const allowedExt = [".pdf", ".jpg", ".jpeg", ".png", ".webp"];
+    if (!allowed.includes(file.type) && !allowedExt.some((e) => file.name.toLowerCase().endsWith(e))) {
+      toast.error("Formato inválido. Use PDF ou imagem (JPG, PNG).");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Arquivo muito grande. Máx 10MB."); return; }
+    setPayFile({ name: file.name, size: file.size });
+    toast.success("Comprovante anexado!");
+  };
 
   const filtered = filter === "todos" ? list : list.filter((p) => p.status === filter);
 
@@ -46,9 +63,10 @@ export default function Pagamentos() {
       id: `pay${Date.now()}`, type: form.type as any, payer: form.payer,
       propertyTitle: form.propertyTitle, dueDate: form.dueDate, amount, status: "pendente",
     }]);
-    toast.success("Cobrança registrada!");
+    toast.success(`Cobrança registrada!${payFile ? " Comprovante anexado." : ""}`);
     setSheetOpen(false);
     setForm(empty);
+    setPayFile(null);
   };
 
   return (
@@ -137,10 +155,36 @@ export default function Pagamentos() {
             </div>
             <div>
               <Label>Observações</Label>
-              <Input className="mt-1.5" placeholder="Informações adicionais..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Textarea className="mt-1.5" rows={2} placeholder="Informações adicionais..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
+
+            {/* Comprovante upload */}
+            <div>
+              <Label>Comprovante de pagamento (PDF, JPG, PNG · máx. 10MB)</Label>
+              <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePayFile(f); e.target.value = ""; }} />
+              {payFile ? (
+                <div className="mt-1.5 flex items-center gap-3 p-3 rounded-xl border border-success/40 bg-success-soft/30">
+                  <Paperclip className="w-4 h-4 text-success flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{payFile.name}</p>
+                    <p className="text-xs text-muted-foreground">{(payFile.size / 1024).toFixed(0)} KB</p>
+                  </div>
+                  <button onClick={() => setPayFile(null)} className="text-muted-foreground hover:text-destructive">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => fileRef.current?.click()}
+                  className="mt-1.5 w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-colors text-left">
+                  <Upload className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">Clique para anexar comprovante (opcional)</span>
+                </button>
+              )}
+            </div>
+
             <div className="flex gap-2 pt-4 border-t border-border">
-              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancelar</Button>
+              <Button variant="outline" className="flex-1" onClick={() => { setSheetOpen(false); setPayFile(null); }}>Cancelar</Button>
               <Button className="flex-1 gradient-primary border-0" onClick={save}>Registrar cobrança</Button>
             </div>
           </div>

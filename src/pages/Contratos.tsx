@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -8,9 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, FileText, Sparkles, Upload } from "lucide-react";
+import { Plus, FileText, Sparkles, Upload, Paperclip, X } from "lucide-react";
 import { contracts, clients, properties, formatBRL, formatDate, Contract } from "@/lib/mock-data";
 import { toast } from "sonner";
+
+const ALLOWED_CONTRACT_TYPES = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"];
+const ALLOWED_CONTRACT_EXT = [".pdf", ".docx", ".txt"];
+interface ContractFile { name: string; size: number; }
 
 interface NewContract {
   propertyCode: string; propertyTitle: string; clientName: string; broker: string;
@@ -26,6 +30,18 @@ export default function Contratos() {
   const [list, setList] = useState<Contract[]>(contracts);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<NewContract>(empty);
+  const [contractFile, setContractFile] = useState<ContractFile | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleContractFile = (file: File) => {
+    if (!ALLOWED_CONTRACT_TYPES.includes(file.type) && !ALLOWED_CONTRACT_EXT.some((e) => file.name.endsWith(e))) {
+      toast.error("Formato inválido. Use PDF, DOCX ou TXT.");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) { toast.error("Arquivo muito grande. Máx 20MB."); return; }
+    setContractFile({ name: file.name, size: file.size });
+    toast.success("Arquivo anexado!");
+  };
 
   // Auto-fill property title from code
   const handleCodeChange = (code: string) => {
@@ -50,9 +66,10 @@ export default function Contratos() {
       totalMonths, mandatoryMonths: mandatory, penalty, monthlyValue: isNaN(monthly) ? 0 : monthly,
       status: form.status as any,
     }]);
-    toast.success("Contrato criado!");
+    toast.success(`Contrato criado!${contractFile ? " Documento anexado." : ""}`);
     setSheetOpen(false);
     setForm(empty);
+    setContractFile(null);
   };
 
   return (
@@ -162,8 +179,33 @@ export default function Contratos() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Document upload */}
+            <div>
+              <Label>Documento do contrato (PDF, DOCX, TXT · máx. 20MB)</Label>
+              <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleContractFile(f); e.target.value = ""; }} />
+              {contractFile ? (
+                <div className="mt-1.5 flex items-center gap-3 p-3 rounded-xl border border-primary/40 bg-primary-soft/30">
+                  <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{contractFile.name}</p>
+                    <p className="text-xs text-muted-foreground">{(contractFile.size / 1024).toFixed(0)} KB</p>
+                  </div>
+                  <button onClick={() => setContractFile(null)} className="text-muted-foreground hover:text-destructive">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => fileRef.current?.click()}
+                  className="mt-1.5 w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-colors text-left">
+                  <Upload className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">Clique para anexar o documento do contrato</span>
+                </button>
+              )}
+            </div>
+
             <div className="flex gap-2 pt-4 border-t border-border">
-              <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancelar</Button>
+              <Button variant="outline" className="flex-1" onClick={() => { setSheetOpen(false); setContractFile(null); }}>Cancelar</Button>
               <Button className="flex-1 gradient-primary border-0" onClick={save}>Criar contrato</Button>
             </div>
           </div>
